@@ -14,16 +14,26 @@ contract DPRPatient is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
 
     struct Patient{
         uint8 Age;
-        string Name;
+        uint8 DiseaseCount;
+
+        string LastName;
+        string FirstName;
     }
 
     struct Doctor{
-        string Name;
+        uint8 Age;
+        uint8 PatientCount;
+        
+        string LastName;
+        string FirstName;
         string Workplace;
         string Qualification;
     }
 
     struct PatientDesease {
+        uint8 DiseaseID;
+        uint8 MediceneCount;
+
         string Name;
         string Symptoms;
     }
@@ -31,7 +41,7 @@ contract DPRPatient is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
     struct Medicene {
         uint8 ID;
         uint8 Price;
-        uint ExpiryDate;
+        uint8 ExpiryDate;
 
         string Dose;
         string Name;
@@ -39,6 +49,7 @@ contract DPRPatient is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
     }
 
     mapping(address => Patient) Patients;
+    mapping(address => mapping(uint8 => PatientDesease)) Diseases;
     mapping(address => Doctor) Doctors;
 
     constructor() ERC20("PatientToken", "DPRS") ERC20Permit("PatientToken") {
@@ -73,6 +84,27 @@ contract DPRPatient is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
         override(ERC20, ERC20Votes)
     {
         super._burn(account, amount);
+    }
+
+    function addDoctor(uint8 age, string memory firstName, string memory lastName, string memory workplace, string memory qualification) public
+    {
+        Doctor storage doc = Doctors[msg.sender];
+        doc.Age = age;
+        doc.LastName = lastName;
+        doc.FirstName = firstName;
+        doc.Workplace = workplace;
+        doc.Qualification = qualification;
+    }
+
+    function getDoctor(address walletAddress) public view returns (uint, string memory, string memory, string memory, string memory)
+    {
+        return (
+                Doctors[walletAddress].Age,
+                Doctors[walletAddress].FirstName,
+                Doctors[walletAddress].LastName,
+                Doctors[walletAddress].Qualification,
+                Doctors[walletAddress].Workplace
+            );
     }
 
     
