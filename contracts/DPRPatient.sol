@@ -27,7 +27,6 @@ contract DPRPatient //is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20
     }
 
     struct Doctor{
-        uint8 Age;
         uint8 PatientCount;
         
         string LastName;
@@ -89,20 +88,18 @@ contract DPRPatient //is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20
     //     super._burn(account, amount);
     // }
 
-    function addDoctor(uint8 age, string memory firstName, string memory lastName, string memory workplace, string memory qualification) public
+    function addDoctor(string memory firstName, string memory lastName, string memory workplace, string memory qualification) public
     {
         Doctor storage doc = Doctors[msg.sender];
-        doc.Age = age;
         doc.LastName = lastName;
         doc.FirstName = firstName;
         doc.Workplace = workplace;
         doc.Qualification = qualification;
     }
 
-    function getDoctor(address walletAddress) public view returns (uint, string memory, string memory, string memory, string memory)
+    function getDoctor(address walletAddress) public view returns (string memory, string memory, string memory, string memory)
     {
         return (
-                Doctors[walletAddress].Age,
                 Doctors[walletAddress].FirstName,
                 Doctors[walletAddress].LastName,
                 Doctors[walletAddress].Qualification,
@@ -116,22 +113,25 @@ contract DPRPatient //is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20
         patient.Age = age;
         patient.LastName = lastName;
         patient.FirstName = firstName;
+        patient.DiseaseCount = 0;
     }
 
-    function addDisease(address walletAddress, uint8 diseaseID, string memory name, string memory symptoms) public
-    {
-        Patient memory patient = Patients[walletAddress];
-        PatientDesease storage patientDisease = Diseases[walletAddress][patient.DiseaseCount];
+     function addDisease(address walletAddress, uint8 diseaseID, string memory name, string memory symptoms)
+     public
+     {
+         Patient storage patient = Patients[walletAddress];         
+         PatientDesease storage patientDisease = Diseases[walletAddress][patient.DiseaseCount];
 
-        patientDisease.Name = name;
-        patientDisease.DiseaseID = diseaseID;
-        patientDisease.Symptoms = symptoms;
-        patient.DiseaseCount++;
-    }
+         patientDisease.Name = name;
+         patientDisease.Symptoms = symptoms;
+         patientDisease.DiseaseID = diseaseID;
+         patient.DiseaseCount ++;
+     }
 
-    function addMedicene(address walletAddress, uint8 diseaseID, uint8 mediceneID, string memory name, string memory dose, string memory concentration, uint8 price, uint8 expiryDate) public
+    function addMedicene(address walletAddress, uint8 diseaseID, uint8 mediceneID, string memory name, string memory dose, string memory concentration, uint8 price, uint8 expiryDate) 
+    public
     {
-        PatientDesease memory patientDisease = Diseases[walletAddress][diseaseID];
+        PatientDesease storage patientDisease = Diseases[walletAddress][diseaseID];
         Medicene storage medicene = Medicenes[walletAddress][diseaseID][patientDisease.MediceneCount];
 
         medicene.Name = name;
@@ -144,12 +144,14 @@ contract DPRPatient //is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20
         patientDisease.MediceneCount++;
     }
 
-    function getPatient(address walletAddress) public view returns (uint8, string memory, string memory)
+    function getPatient(address walletAddress) public view returns (uint8, string memory, string memory, uint)
     {
+        Patient memory patient = Patients[walletAddress];
         return (
-        Patients[walletAddress].Age,
-        Patients[walletAddress].FirstName,
-        Patients[walletAddress].LastName
+            patient.Age,
+            patient.FirstName,
+            patient.LastName,
+            patient.DiseaseCount
         );
     }
 
@@ -164,5 +166,19 @@ contract DPRPatient //is ERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20
         }
 
         return diseases;
+    }
+
+    function getMedicenes(address walletAddress, uint8 diseaseID) public view returns (Medicene[] memory)
+    {
+        PatientDesease storage patientDisease = Diseases[walletAddress][diseaseID];
+        uint mediceneCount = patientDisease.MediceneCount;
+        Medicene[] memory medicenes = new Medicene[](mediceneCount);
+
+        for(uint8 index = 0; index < mediceneCount; index++)
+        {
+            medicenes[index] = Medicenes[walletAddress][diseaseID][index];
+        }
+
+        return medicenes;
     }
 }
