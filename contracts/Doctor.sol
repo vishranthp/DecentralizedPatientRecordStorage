@@ -68,6 +68,7 @@ contract DPRDoctor is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
         super._burn(account, amount);
     }
 
+    // Add a doctor
     function addDoctor(string memory firstName, string memory lastName, string memory workplace, string memory qualification) public
     {
         Doctor storage doc = Doctors[msg.sender];
@@ -77,6 +78,8 @@ contract DPRDoctor is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
         doc.Qualification = qualification;
     }
 
+    // return details of the doctor
+    // walletAddress: Address of Doctor
     function getDoctor(address walletAddress) public view returns (string memory, string memory, string memory, string memory)
     {
         return (
@@ -87,11 +90,18 @@ contract DPRDoctor is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
             );
     }
 
+    // Get Patient information
+    // contractAddress: Address where the Patient contract is deployed.
+    // walletAddress: Address of Patient whose details have to be fetched
     function getPatient(address contractAddress, address walletAddress) public view returns (uint8, string memory, string memory, uint)
     {
         return DPRPatient(contractAddress).getPatient(walletAddress);
     }
 
+    // Get the list of medicenes for a patient.
+    // contractAddress: Address where the Patient contract is deployed.
+    // walletAddress: Address of Patient whose details have to be fetched
+    // diseaseID: The Disease ID for which the Medicenes have to be fetched
     function getMedicenes(address contractAddress, address patientAddress, uint8 diseaseID) external view returns (Medicene[] memory)
     {
         uint8 mediceneCount = DPRPatient(contractAddress).getMediceneCount(patientAddress, diseaseID);
@@ -103,6 +113,12 @@ contract DPRDoctor is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
         return medicenes;
     }
 
+    // Doctor Prescribes Medicene to a patient.
+    // contractAddress: Address where the Patient contract is deployed.
+    // patientAddress: Address of Patient to whom Medicene has to be prescribed
+    // walletAddress: Address of Doctor
+    // diseaseID: The Disease ID for which the Medicenes have to be added
+    // Rest are details of Medicene
     function prescribeMedicene(address contractAddress, address patientAddress, address walletAddress, uint8 diseaseID, uint8 mediceneID, string memory name, string memory dose, string memory concentration, uint8 price, uint expiryDate) 
     public
     {

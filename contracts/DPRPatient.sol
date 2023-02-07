@@ -64,6 +64,7 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
         super._burn(account, amount);
     }
 
+    // Add a Patient
     function addPatient(uint8 age, string memory firstName, string memory lastName) public
     {
         Patient storage patient = Patients[msg.sender];
@@ -72,6 +73,9 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
         patient.FirstName = firstName;
     }
 
+    // Add  Disease
+    // walletAddress: Address of Patient
+    // Rest are details of disease
      function addDisease(address walletAddress, uint8 diseaseID, string memory name, string memory symptoms)
      public
      {
@@ -84,6 +88,8 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
          patient.DiseaseCount ++;
      }
 
+    // Get Patient details
+    // walletAddress: Address of Patient
     function getPatient(address walletAddress) public view returns (uint8, string memory, string memory, uint)
     {
         Patient memory patient = Patients[walletAddress];
@@ -95,6 +101,8 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
         );
     }
 
+    // Get list of Diseases for a Patient
+    // walletAddress: Address of Patient
     function getDiseases(address walletAddress) public view returns (PatientDesease[] memory)
     {
         uint diseaseCount = Patients[walletAddress].DiseaseCount;
@@ -106,16 +114,25 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
         return diseases;
     }
 
+    // Get a particular disease for a Patient
+    // walletAddress: Address of Patient
+    // diseaseID: ID of the disease
     function getDisease(address walletAddress, uint8 diseaseID) public view returns (PatientDesease memory)
     {
         return Diseases[walletAddress][diseaseID];
     }
 
+    // Get the Medicene count of a patient for a disease
+    // walletAddress: Address of Patient
+    // diseaseID: ID of the disease
     function getMediceneCount(address walletAddress, uint8 diseaseID) public view returns (uint8)
     {
         return Diseases[walletAddress][diseaseID].MediceneCount;
     }
 
+    // Increment the Medicene count of a patient for a disease
+    // walletAddress: Address of Patient
+    // diseaseID: ID of the disease
     function updateMediceneCount(address walletAddress, uint8 diseaseID) public returns (uint8)
     {
         return Diseases[walletAddress][diseaseID].MediceneCount++;
