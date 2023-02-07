@@ -15,12 +15,10 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
 
     mapping(address => Patient) Patients;
     mapping(address => mapping(uint => PatientDesease)) Diseases;
-    
 
     struct Patient{
         uint8 Age;
         uint DiseaseCount;
-
         string LastName;
         string FirstName;
     }
@@ -28,7 +26,6 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
     struct PatientDesease {
         uint8 DiseaseID;
         uint8 MediceneCount;
-
         string Name;
         string Symptoms;
     }
@@ -81,7 +78,6 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
          require(msg.sender == walletAddress, "Only owner can add");
          Patient storage patient = Patients[walletAddress];         
          PatientDesease storage patientDisease = Diseases[walletAddress][patient.DiseaseCount];
-
          patientDisease.Name = name;
          patientDisease.Symptoms = symptoms;
          patientDisease.DiseaseID = diseaseID;
@@ -103,24 +99,25 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
     {
         uint diseaseCount = Patients[walletAddress].DiseaseCount;
         PatientDesease[] memory diseases = new PatientDesease[](diseaseCount);
-
         for(uint index = 0; index < diseaseCount; index++)
         {
             diseases[index] = Diseases[walletAddress][index];
         }
-
         return diseases;
+    }
+
+    function getDisease(address walletAddress, uint8 diseaseID) public view returns (PatientDesease memory)
+    {
+        return Diseases[walletAddress][diseaseID];
     }
 
     function getMediceneCount(address walletAddress, uint8 diseaseID) public view returns (uint8)
     {
-        PatientDesease memory patientDisease = Diseases[walletAddress][diseaseID];
-        return patientDisease.MediceneCount;
+        return Diseases[walletAddress][diseaseID].MediceneCount;
     }
 
-    function updateMediceneCount(address walletAddress, uint8 diseaseID, uint8 count) public
+    function updateMediceneCount(address walletAddress, uint8 diseaseID) public returns (uint8)
     {
-        PatientDesease storage patientDisease = Diseases[walletAddress][diseaseID];
-        patientDisease.MediceneCount = count;
+        return Diseases[walletAddress][diseaseID].MediceneCount++;
     }
 }

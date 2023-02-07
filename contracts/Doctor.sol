@@ -13,9 +13,8 @@ contract DPRDoctor is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant DOCTOR_ROLE = keccak256("DOCTOR_ROLE");
 
-    DPRPatient patient;
     mapping(address => Doctor) Doctors;
-    mapping(address => mapping(uint8 => mapping(uint8 => Medicene))) Medicenes;  
+    mapping(address => mapping(uint8 => mapping(uint8 => Medicene))) Medicenes;
 
     struct Doctor{
         uint8 PatientCount;
@@ -29,8 +28,7 @@ contract DPRDoctor is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
     struct Medicene {
         uint8 ID;
         uint8 Price;
-        uint8 ExpiryDate;
-
+        uint ExpiryDate;
         string Dose;
         string Name;
         string Concentration;
@@ -89,12 +87,28 @@ contract DPRDoctor is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
             );
     }
 
-    function prescribeMedicene(address walletAddress, uint8 diseaseID, uint8 mediceneID, string memory name, string memory dose, string memory concentration, uint8 price, uint8 expiryDate) 
+    function getPatient(address contractAddress, address walletAddress) public view returns (uint8, string memory, string memory, uint)
+    {
+        return DPRPatient(contractAddress).getPatient(walletAddress);
+    }
+
+    function getMedicenes(address contractAddress, address patientAddress, uint8 diseaseID) external view returns (Medicene[] memory)
+    {
+        uint8 mediceneCount = DPRPatient(contractAddress).getMediceneCount(patientAddress, diseaseID);
+        Medicene[] memory medicenes = new Medicene[](mediceneCount);
+        for(uint8 index = 0; index < mediceneCount; index++)
+        {
+            medicenes[index] = Medicenes[patientAddress][diseaseID][index];
+        }
+        return medicenes;
+    }
+
+    function prescribeMedicene(address contractAddress, address patientAddress, address walletAddress, uint8 diseaseID, uint8 mediceneID, string memory name, string memory dose, string memory concentration, uint8 price, uint expiryDate) 
     public
     {
         require(msg.sender == walletAddress, "Only Doctor can prescribe");
-        uint8 mediceneCount = patient.getMediceneCount(walletAddress, diseaseID);
-        Medicene storage medicene = Medicenes[walletAddress][diseaseID][mediceneCount];
+        uint8 mediceneCount = DPRPatient(contractAddress).getMediceneCount(patientAddress, diseaseID);
+        Medicene storage medicene = Medicenes[patientAddress][diseaseID][mediceneCount];
 
         medicene.Name = name;
         medicene.Dose = dose;
@@ -103,21 +117,6 @@ contract DPRDoctor is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20Vo
         medicene.ExpiryDate = expiryDate;
         medicene.Concentration = concentration;
 
-        mediceneCount++;
-
-        patient.updateMediceneCount(walletAddress, diseaseID, mediceneCount);
-    }
-
-    function getMedicenes(address walletAddress, uint8 diseaseID) public view returns (Medicene[] memory)
-    {
-        uint8 mediceneCount = patient.getMediceneCount(walletAddress, diseaseID);
-        Medicene[] memory medicenes = new Medicene[](mediceneCount);
-
-        for(uint8 index = 0; index < mediceneCount; index++)
-        {
-            medicenes[index] = Medicenes[walletAddress][diseaseID][index];
-        }
-
-        return medicenes;
+        DPRPatient(contractAddress).updateMediceneCount(patientAddress, diseaseID);
     }
 }
