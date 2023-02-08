@@ -15,6 +15,7 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
 
     mapping(address => Patient) Patients;
     mapping(address => mapping(uint => PatientDesease)) Diseases;
+    mapping(address => mapping(uint8 => mapping(uint8 => Medicene))) Medicenes;
 
     struct Patient{
         uint8 Age;
@@ -28,6 +29,15 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
         uint8 MediceneCount;
         string Name;
         string Symptoms;
+    }
+
+    struct Medicene {
+        uint8 ID;
+        uint8 Price;
+        uint ExpiryDate;
+        string Dose;
+        string Name;
+        string Concentration;
     }
 
     constructor() ERC20("PatientToken", "DPRS") ERC20Permit("PatientToken") {
@@ -136,5 +146,45 @@ contract DPRPatient is IERC20, ERC20Burnable, AccessControl, ERC20Permit, ERC20V
     function updateMediceneCount(address walletAddress, uint8 diseaseID) public returns (uint8)
     {
         return Diseases[walletAddress][diseaseID].MediceneCount++;
+    }
+
+    // Get the list of medicenes for a patient.
+    // walletAddress: Address of Patient whose details have to be fetched
+    // diseaseID: The Disease ID for which the Medicenes have to be fetched
+    function getMedicenes(address patientAddress, uint8 diseaseID) external view returns (Medicene[] memory)
+    {
+        uint8 mediceneCount = Diseases[patientAddress][diseaseID].MediceneCount;
+        Medicene[] memory medicenes = new Medicene[](mediceneCount);
+        for(uint8 index = 0; index < mediceneCount; index++)
+        {
+            medicenes[index] = Medicenes[patientAddress][diseaseID][index];
+        }
+        return medicenes;
+    }
+
+    // Doctor Prescribes Medicene to a patient.
+    // doctorContract: Address of Doctor contract
+    // doctorAddress: Address of Doctor
+    // patientAddress: Address of Patient to whom Medicene has to be prescribed
+    // diseaseID: The Disease ID for which the Medicenes have to be added
+    // Rest are details of Medicene
+    function prescribeMedicene(address doctorContract, address doctorAddress, address patientAddress, uint8 diseaseID, uint8 mediceneID, string memory name, string memory dose, string memory concentration, uint8 price, uint expiryDate) 
+    public
+    {
+        if (DPRDoctor(doctorContract).isDoctor(doctorAddress) == false)
+        {
+            revert("Only a Dcotor can prescribe Medicene.");
+        }
+        uint8 mediceneCount = Diseases[patientAddress][diseaseID].MediceneCount;
+        Medicene storage medicene = Medicenes[patientAddress][diseaseID][mediceneCount];
+
+        medicene.Name = name;
+        medicene.Dose = dose;
+        medicene.Price = price;
+        medicene.ID = mediceneID;
+        medicene.ExpiryDate = expiryDate;
+        medicene.Concentration = concentration;
+
+        Diseases[patientAddress][diseaseID].MediceneCount++;
     }
 }
